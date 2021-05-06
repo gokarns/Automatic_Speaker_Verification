@@ -74,11 +74,14 @@ class ASV():
     def train(self, X, y):
 
         '''
-        Used to register speakers
+        Used to train a speaker recognition model
 
         X: a numpy array containing training data of shape mxn where m is the number of samples and n is the length of one sample
         y: a numpy array or list containing true labels against training data of size mx1 where ith entry is the label of ith row in X 
         '''
+
+        #TODO: implement a nearest neighbour algorithm. Train it on the voice dataset, already available in the repository.
+        #  
 
         return X
 
@@ -86,35 +89,58 @@ class ASV():
 
 if __name__ == "__main__":
 
+    # 1. extract features from all the audio files
+    # 2. conctenate all the features into one variable, lets say called X
+    # 3. concatenate all the labels into one variable, lets say called y
+    # 4. you may need to divide the dataset into train and test
+
     wav_fpaths = list(Path("audio_data", "librispeech_test-other").glob("**/*.flac"))
     # speaker_1_paths = list(Path("audio_data", "librispeech_test-other", "367").glob("*.flac"))
 
-    # print(speaker_1_paths)
+    # print(wav_fpaths)
 
     speaker_wavs = {speaker: list(map(preprocess_wav, wav_fpaths)) for speaker, wav_fpaths in
                 groupby(tqdm(wav_fpaths, "Preprocessing wavs", len(wav_fpaths), unit="wavs"), 
                         lambda wav_fpath: wav_fpath.parent.stem)}
 
-    speaker1_wavs = speaker_wavs['367']
-    speaker2_wavs = speaker_wavs['533']
+    # print(speaker_wavs)
+    speaker1_wavs = np.array(speaker_wavs['367'])
+    y = ['367'] * 10
+    y = np.array(y)
 
-    # create the speaker verification class 
+    print(speaker1_wavs)
+    print(np.shape(speaker1_wavs))
+
+    print(y)
+    # speaker2_wavs = speaker_wavs['533']
+
+    # # create the speaker verification class 
     asv = ASV(threshold=0.8)
 
-    # register the first new speakers
-    asv.register_speaker(speaker1_wavs)
+    speaker1_embed = []
+    for feat in speaker1_wavs:
+        embed = asv.extract_features(feat)
 
-    # register the 2nd new speaker
-    asv.register_speaker(speaker2_wavs)
+        speaker1_embed.append(embed)
 
-    print(asv._speaker_embeddings)
+    speaker1_embed = np.array(speaker1_embed)
 
-    # test a sample
-    test_sample = speaker_wavs['367'][2]
+    print(speaker1_embed)
+
+    # # register the first new speakers
+    # asv.register_speaker(speaker1_wavs)
+
+    # # register the 2nd new speaker
+    # asv.register_speaker(speaker2_wavs)
+
+    # print(asv._speaker_embeddings)
+
+    # # test a sample
+    # test_sample = speaker_wavs['367'][2]
     
-    test_features = asv.extract_features(test_sample)
+    # test_features = asv.extract_features(test_sample)
     
-    sim = asv.compute_similarity(asv._speaker_embeddings[1], test_features)
-    print(sim)
+    # sim = asv.compute_similarity(asv._speaker_embeddings[1], test_features)
+    # print(sim)
 
-    asv.verify_speaker(test_sample)
+    # asv.verify_speaker(test_sample)
