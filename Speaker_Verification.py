@@ -5,6 +5,10 @@ from tqdm import tqdm
 
 from resemblyzer import preprocess_wav, VoiceEncoder
 
+from sklearn.model_selection import train_test_split
+from sklearn import neighbors, datasets
+
+
 encoder = VoiceEncoder()
 
 
@@ -81,7 +85,11 @@ class ASV():
         '''
 
         #TODO: implement a nearest neighbour algorithm. Train it on the voice dataset, already available in the repository.
-        #  
+        
+        nghbr = neighbors.KNeighborsClassifier(n_neighbors = 3)
+        nghbr.fit(X, y)
+        print(neigh.predict([[1.1]]))
+
 
         return X
 
@@ -104,28 +112,69 @@ if __name__ == "__main__":
                         lambda wav_fpath: wav_fpath.parent.stem)}
 
     # print(speaker_wavs)
-    speaker1_wavs = np.array(speaker_wavs['367'])
-    y = ['367'] * 10
-    y = np.array(y)
 
-    print(speaker1_wavs)
-    print(np.shape(speaker1_wavs))
+    ##gets key names for future use
+    key_names = []
+    for k in speaker_wavs.keys():
+        key_names.append(k)
+    
+    ##gets a list of all wavs - 
+    list_wavs = []
+    list_y = []
+    for k in key_names:
+        speaker_n_wavs =  np.array(speaker_wavs[k]) ##get the wavs of ONE folder/lbl
+        list_wavs.append(speaker_n_wavs) ##append to get list of ALL wavs into one place
 
-    print(y)
-    # speaker2_wavs = speaker_wavs['533']
+        y_n = [k]*10 ##allocate space for y vect
+        y_n = np.array(y_n)
+        list_y.append(y_n) ##add new array to list_y array - puts y labels in same order as wavs
+        
 
-    # # create the speaker verification class 
+    ##embeds the previously obtained wavs
     asv = ASV(threshold=0.8)
+    list_embed = []
+    test_embed = []
+    
+    for wav in list_wavs: ##for each array, in the list_wavs array
+        print("wav!") 
+        for feat in wav: ##for each feat in the wav array
+            print(" -feat!")
+            embed = asv.extract_features(feat)
+            test_embed.append(embed)
+            print("shape test_embed:" + str(np.shape(test_embed)))
 
-    speaker1_embed = []
-    for feat in speaker1_wavs:
-        embed = asv.extract_features(feat)
+        list_embed.append(test_embed)
+    list_embed = np.array(list_embed) ##now - have all wavs embedded
+    print("shape wav:" + str(np.shape(list_wavs)))
+    print("shape embed:" + str(np.shape(list_embed)))
+    ##set X and Y accordingly for ease of use
+    X = list_embed
+    Y = list_y
 
-        speaker1_embed.append(embed)
+    ##FIXME: below may not be in order?
+    ##splitting to test and train:
+    # x_train, x_test = train_test_split(X, test_size = .3, shuffle = True)
+    # y_train, y_test = train_test_split(Y, test_size = .3, shuffle = True)
+    x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size = .3, shuffle = True)
+    print("y_train: " + str(y_train)) ##now - 7/10 arrays (containing label names) in y array, are for training
+    print("y_test: " + str(y_test)) ##now - 3/10 arrays (in y array) are for testing
+    print("x_train: " + str(np.shape(x_train))) ##now - 7/10 arrays (containing label names) in y array, are for training
+    print("x_test: " + str(np.shape(x_test))) ##now - 3/10 arrays (in y array) are for testing
 
-    speaker1_embed = np.array(speaker1_embed)
+    '''fixme (noel): below not needed'''
+    # speaker1_wavs = np.array(speaker_wavs['533'])
+    # create the speaker verification class 
+    # asv = ASV(threshold=0.8)
+    # speaker1_embed = []
+    # for feat in speaker1_wavs:
+    #     embed = asv.extract_features(feat)
+    #     speaker1_embed.append(embed)
+    # speaker1_embed = np.array(speaker1_embed)
+    # print(speaker1_embed)
+    '''!!'''
 
-    print(speaker1_embed)
+    asv.train(X, Y)
+ 
 
     # # register the first new speakers
     # asv.register_speaker(speaker1_wavs)
