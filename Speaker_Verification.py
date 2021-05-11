@@ -117,49 +117,60 @@ if __name__ == "__main__":
     key_names = []
     for k in speaker_wavs.keys():
         key_names.append(k)
-    
-    ##gets a list of all wavs - 
-    list_wavs = []
+
+
+    list_wavs_X = []
     list_y = []
     for k in key_names:
+        if(k == '367'):
+            s = np.array(speaker_wavs[k])
+            print("speaker_wav_vals 367:")
+            print(s)
         speaker_n_wavs =  np.array(speaker_wavs[k]) ##get the wavs of ONE folder/lbl
-        list_wavs.append(speaker_n_wavs) ##append to get list of ALL wavs into one place
-
-        y_n = [k]*10 ##allocate space for y vect
-        y_n = np.array(y_n)
-        list_y.append(y_n) ##add new array to list_y array - puts y labels in same order as wavs
-        
+        list_wavs_X.append(speaker_n_wavs) ##append to get list of ALL wavs into one place
+        # y = [float(k)] * 10
+        # y = np.array(y)
+        # list_y.append(y)
+        list_y.append(int(k))
+    list_y = np.array(list_y)
 
     ##embeds the previously obtained wavs
-    asv = ASV(threshold=0.8)
-    list_embed = []
-    test_embed = []
-    
-    for wav in list_wavs: ##for each array, in the list_wavs array
-        print("wav!") 
-        for feat in wav: ##for each feat in the wav array
-            print(" -feat!")
-            embed = asv.extract_features(feat)
-            test_embed.append(embed)
-            print("shape test_embed:" + str(np.shape(test_embed)))
+    # list_embed = []
+    # test_embed = []
+    # for wav in list_wavs: ##for each array, in the list_wavs array
+    #     # print("wav!") 
+    #     embed = asv.extract_features(wav)
+    #     test_embed.append(embed)
+    #     # for feat in wav: ##for each feat in the wav array
+    #     #     print(" -feat!")
+    #     #     embed = asv.extract_features(feat)
+    #     #     test_embed.append(embed)
+    #     #     # print("shape test_embed:" + str(np.shape(test_embed)))
+    #     list_embed.append(test_embed)
+    # list_embed = np.array(list_embed) ##now - have all wavs embedded
 
-        list_embed.append(test_embed)
-    list_embed = np.array(list_embed) ##now - have all wavs embedded
-    print("shape wav:" + str(np.shape(list_wavs)))
-    print("shape embed:" + str(np.shape(list_embed)))
+
     ##set X and Y accordingly for ease of use
-    X = list_embed
+    X = list_wavs_X##list_embed
     Y = list_y
+    print("x at 0: ")
+    print(X[0])
 
     ##FIXME: below may not be in order?
     ##splitting to test and train:
-    # x_train, x_test = train_test_split(X, test_size = .3, shuffle = True)
-    # y_train, y_test = train_test_split(Y, test_size = .3, shuffle = True)
     x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size = .3, shuffle = True)
-    print("y_train: " + str(y_train)) ##now - 7/10 arrays (containing label names) in y array, are for training
-    print("y_test: " + str(y_test)) ##now - 3/10 arrays (in y array) are for testing
-    print("x_train: " + str(np.shape(x_train))) ##now - 7/10 arrays (containing label names) in y array, are for training
-    print("x_test: " + str(np.shape(x_test))) ##now - 3/10 arrays (in y array) are for testing
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
+    x_train = np.array(x_train)    
+    x_test = np.array(x_test)
+
+    print("y_train : " + str(y_train)) ##now - 7/10 arrays (containing label names) in y array, are for training
+    print("y_test : " + str(y_test)) ##now - 3/10 arrays (in y array) are for testing
+    # print("x_train : " + str(x_train))#str(np.shape(x_train))) ##now - 7/10 arrays (containing label names) in y array, are for training
+    # print("x_test : " + str(x_test))#str(np.shape(x_test))) ##now - 3/10 arrays (in y array) are for testing
+
+    asv = ASV(threshold=0.8)
+    asv.train(x_train, y_train)
 
     '''fixme (noel): below not needed'''
     # speaker1_wavs = np.array(speaker_wavs['533'])
@@ -173,7 +184,6 @@ if __name__ == "__main__":
     # print(speaker1_embed)
     '''!!'''
 
-    asv.train(X, Y)
  
 
     # # register the first new speakers
