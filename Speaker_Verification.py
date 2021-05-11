@@ -15,7 +15,7 @@ class ASV():
         self._voice_embeddings = []
         self._speaker_embeddings = []
         self.theshold = threshold
-        self.Verified = 'False'
+        self.Verified = False
 
     
     def extract_features(self, voice_sample):
@@ -65,6 +65,8 @@ class ASV():
                 self.Verified = True
 
                 break
+            # else:
+            #     self.Verified = False
         
         if self.Verified:
             print('Speaker is Verified')
@@ -104,43 +106,45 @@ if __name__ == "__main__":
                         lambda wav_fpath: wav_fpath.parent.stem)}
 
     # print(speaker_wavs)
-    speaker1_wavs = np.array(speaker_wavs['367'])
-    y = ['367'] * 10
-    y = np.array(y)
 
-    print(speaker1_wavs)
-    print(np.shape(speaker1_wavs))
+    speaker1_wavs = speaker_wavs['367']
+    # y = ['367'] * 10
+    # y = np.array(y)
 
-    print(y)
-    # speaker2_wavs = speaker_wavs['533']
+    # print(speaker1_wavs)
+    # print(np.shape(speaker1_wavs))
 
-    # # create the speaker verification class 
+    # # print(y)
+    speaker2_wavs = speaker_wavs['533']
+
+    # create the speaker verification class 
     asv = ASV(threshold=0.8)
 
-    speaker1_embed = []
-    for feat in speaker1_wavs:
-        embed = asv.extract_features(feat)
+    # # speaker1_embed = []
+    # # for feat in speaker1_wavs:
+    # #     embed = asv.extract_features(feat)
 
-        speaker1_embed.append(embed)
+    # #     speaker1_embed.append(embed)
 
-    speaker1_embed = np.array(speaker1_embed)
+    # # speaker1_embed = np.array(speaker1_embed)
 
-    print(speaker1_embed)
+    # # print(speaker1_embed)
 
-    # # register the first new speakers
-    # asv.register_speaker(speaker1_wavs)
+    # register the first new speakers
+    asv.register_speaker(speaker1_wavs)
 
-    # # register the 2nd new speaker
-    # asv.register_speaker(speaker2_wavs)
+    # register the 2nd new speaker
+    asv.register_speaker(speaker2_wavs)
 
-    # print(asv._speaker_embeddings)
+    # print(np.shape(asv._speaker_embeddings[0]))
 
-    # # test a sample
+    # test a sample
     # test_sample = speaker_wavs['367'][2]
+    test_sample = speaker_wavs['1688'][5]
     
-    # test_features = asv.extract_features(test_sample)
+    test_features = asv.extract_features(test_sample)
     
-    # sim = asv.compute_similarity(asv._speaker_embeddings[1], test_features)
-    # print(sim)
+    sim = asv.compute_similarity(asv._speaker_embeddings[1], test_features)
+    print(sim)
 
-    # asv.verify_speaker(test_sample)
+    asv.verify_speaker(test_sample)
