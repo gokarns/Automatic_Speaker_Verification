@@ -2,6 +2,9 @@ import numpy as np
 from pathlib import Path
 from itertools import groupby
 from tqdm import tqdm
+from sklearn import svm
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
 from resemblyzer import preprocess_wav, VoiceEncoder
 
@@ -19,7 +22,9 @@ class ASV():
         self._voice_embeddings = []
         self._speaker_embeddings = []
         self.theshold = threshold
-        self.Verified = 'False'
+        self.Verified = False
+
+        self.lin_svm_clf = svm.LinearSVC()
 
     
     def extract_features(self, voice_sample):
@@ -69,6 +74,8 @@ class ASV():
                 self.Verified = True
 
                 break
+            # else:
+            #     self.Verified = False
         
         if self.Verified:
             print('Speaker is Verified')
@@ -93,6 +100,29 @@ class ASV():
 
         return X
 
+
+    def train_svm(self, X, Y):
+
+        self.lin_svm_clf.fit(X, Y)
+
+
+
+def create_X_Y(speaker_wavs_data):
+
+    '''
+    speaker_wavs_data: a dictionary containining the names of the speaker as keys and data as values
+    '''
+
+    X = []
+    y = []
+
+    for spk, feat in speaker_wavs_data.items():
+
+        X.extend(feat)
+        y.extend([spk]*len(feat)) 
+
+    
+    return np.array(X), np.array(y)
 
 
 if __name__ == "__main__":
@@ -186,16 +216,66 @@ if __name__ == "__main__":
 
  
 
+    X, y = create_X_Y(speaker_wavs)
+    
+    print("X = ", X)
+
+    print("y = ", y)
+
+    
+    # y = ['367'] * 10
+    # y = np.array(y)
+
+    # print(speaker1_wavs)
+    # print(np.shape(speaker1_wavs))
+
+    # # print(y)
+    # speaker1_wavs = speaker_wavs['367']
+    # speaker2_wavs = speaker_wavs['533']
+
+    # create the speaker verification class 
+    asv = ASV(threshold=0.8)
+
+    # embedding the voices in X
+    X_embed = []
+    for wav_processed in X:
+
+        # print(wav_processed)
+        X_embed.append(asv.extract_features(wav_processed))
+
+    # print(X_embed)
+
+    # split into training and testing
+    X_train, X_test, y_train, y_test = train_test_split(X_embed, y, test_size=0.8)
+
+    # train svm classifier
+    asv.train_svm(X_train, y_train)
+
+    y_pred = asv.lin_svm_clf.predict(X_test)
+
+    print("accuracy = ", accuracy_score(y_test, y_pred))
+
+    # # speaker1_embed = []
+    # # for feat in speaker1_wavs:
+    # #     embed = asv.extract_features(feat)
+
+    # #     speaker1_embed.append(embed)
+
+    # # speaker1_embed = np.array(speaker1_embed)
+
+    # # print(speaker1_embed)
+
     # # register the first new speakers
     # asv.register_speaker(speaker1_wavs)
 
     # # register the 2nd new speaker
     # asv.register_speaker(speaker2_wavs)
 
-    # print(asv._speaker_embeddings)
+    # # print(np.shape(asv._speaker_embeddings[0]))
 
     # # test a sample
-    # test_sample = speaker_wavs['367'][2]
+    # # test_sample = speaker_wavs['367'][2]
+    # test_sample = speaker_wavs['1688'][5]
     
     # test_features = asv.extract_features(test_sample)
     
