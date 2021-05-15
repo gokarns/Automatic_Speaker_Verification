@@ -3,6 +3,7 @@ from pathlib import Path
 from itertools import groupby
 from tqdm import tqdm
 from sklearn import svm
+from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
@@ -21,6 +22,7 @@ class ASV():
         self.Verified = False
 
         self.lin_svm_clf = svm.LinearSVC()
+        self.gm = GaussianMixture(n_components=5, covariance_type='diag',n_init = 3)
 
     
     def extract_features(self, voice_sample):
@@ -97,6 +99,10 @@ class ASV():
 
         self.lin_svm_clf.fit(X, Y)
 
+    
+    def train_gmm(self, X, Y):
+
+        self.gm.fit(X,Y)
 
 
 def create_X_Y(speaker_wavs_data):
@@ -165,10 +171,13 @@ if __name__ == "__main__":
     # print(X_embed)
 
     # split into training and testing
-    X_train, X_test, y_train, y_test = train_test_split(X_embed, y, test_size=0.8)
+    X_train, X_test, y_train, y_test = train_test_split(X_embed, y, test_size=0.5)
 
     # train svm classifier
-    asv.train_svm(X_train, y_train)
+    # asv.train_svm(X_train, y_train)
+
+    # train the gmm model
+    asv.train_gmm(X_train)
 
     y_pred = asv.lin_svm_clf.predict(X_test)
 
