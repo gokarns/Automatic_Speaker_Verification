@@ -21,12 +21,14 @@ class ASV():
     def __init__(self, threshold=0.5):
 
         self._voice_embeddings = []
-        self._speaker_embeddings = []
+        self._speaker_embeddings = dict()
         self.theshold = threshold
         self.Verified = False
+        self.id = ''
+        self.sim = 0
 
         self.lin_svm_clf = svm.LinearSVC()
-        self.gm = GaussianMixture(n_components=5, covariance_type='diag',n_init = 3)
+        self.gm = GaussianMixture(n_components=5, covariance_type='diag', n_init = 3)
 
     
     def extract_features(self, voice_sample):
@@ -38,14 +40,15 @@ class ASV():
         return voice_embedding
 
 
-    def register_speaker(self, wavs_list):
+    def register_speaker(self, wavs_list, id='id10001'):
         '''
         adds a new speaker
         '''
 
         speaker_embed = encoder.embed_speaker(wavs_list)
         
-        self._speaker_embeddings.append(speaker_embed)
+        # self._speaker_embeddings.append(speaker_embed)
+        self._speaker_embeddings[id] = speaker_embed
 
         # return speaker_embed
 
@@ -57,7 +60,7 @@ class ASV():
         return sim
 
     
-    def verify_speaker(self, test_wav):
+    def verify_speaker(self, test_wav, claimed_id=False):
         '''
         verify a new test sample
         '''
@@ -66,24 +69,46 @@ class ASV():
         # test_embedd = encoder.embed_utterance(test_wav)
         test_embedd = self.extract_features(test_wav)
 
-        # verify it against the registered speakers
-        for spk in self._speaker_embeddings:
+        if claimed_id:
 
-            sim_test_sample = self.compute_similarity(spk, test_embedd)
+            spk_embed = self._speaker_embeddings[claimed_id]
+
+            # compute similarity
+            sim_test_sample = self.compute_similarity(spk_embed, test_embedd)
 
             if sim_test_sample > self.theshold:
 
                 self.Verified = True
+                self.id = claimed_id
+                self.sim = sim_test_sample
 
-                break
-            # else:
-            #     self.Verified = False
+            else:
+                self.Verified = False
+                self.sim = sim_test_sample
+
+        else:
+
+            # verify it against the registered speakers
+            for spk in self._speaker_embeddings:
+
+                sim_test_sample = self.compute_similarity(spk, test_embedd)
+
+                if sim_test_sample > self.theshold:
+
+                    self.Verified = True
+
+                    break
+                # else:
+                #     self.Verified = False
         
         if self.Verified:
-            print('Speaker is Verified')
+            print('Speaker is Verified, Id = ', self.id)
+            print('Similarity of the test sample is ', self.sim)
         else:
-            print("Speaker is Not Registered")
+            print("Speaker is Not Registered or Claimed idenity does not match the registered speakers")
+            print('Similarity of the test sample is ', self.sim)
 
+    
     def train(self, X, y):
 
         '''
@@ -97,8 +122,6 @@ class ASV():
         
         nghbr = neighbors.KNeighborsClassifier(n_neighbors = 3)
         nghbr.fit(X, y)
-        print(neigh.predict([[1.1]]))
-
 
         return X
 
@@ -108,9 +131,9 @@ class ASV():
         self.lin_svm_clf.fit(X, Y)
 
     
-    def train_gmm(self, X, Y):
+    def train_gmm(self, X):
 
-        self.gm.fit(X,Y)
+        self.gm.fit(X)
 
 
 def create_X_Y(speaker_wavs_data):
@@ -149,79 +172,6 @@ if __name__ == "__main__":
 
     # print(speaker_wavs)
 
-    ##gets key names for future use
-    key_names = []
-    for k in speaker_wavs.keys():
-        key_names.append(k)
-
-
-    list_wavs_X = []
-    list_y = []
-    for k in key_names:
-        if(k == '367'):
-            s = np.array(speaker_wavs[k])
-            print("speaker_wav_vals 367:")
-            print(s)
-        speaker_n_wavs =  np.array(speaker_wavs[k]) ##get the wavs of ONE folder/lbl
-        list_wavs_X.append(speaker_n_wavs) ##append to get list of ALL wavs into one place
-        # y = [float(k)] * 10
-        # y = np.array(y)
-        # list_y.append(y)
-        list_y.append(int(k))
-    list_y = np.array(list_y)
-
-    ##embeds the previously obtained wavs
-    # list_embed = []
-    # test_embed = []
-    # for wav in list_wavs: ##for each array, in the list_wavs array
-    #     # print("wav!") 
-    #     embed = asv.extract_features(wav)
-    #     test_embed.append(embed)
-    #     # for feat in wav: ##for each feat in the wav array
-    #     #     print(" -feat!")
-    #     #     embed = asv.extract_features(feat)
-    #     #     test_embed.append(embed)
-    #     #     # print("shape test_embed:" + str(np.shape(test_embed)))
-    #     list_embed.append(test_embed)
-    # list_embed = np.array(list_embed) ##now - have all wavs embedded
-
-
-    ##set X and Y accordingly for ease of use
-    X = list_wavs_X##list_embed
-    Y = list_y
-    print("x at 0: ")
-    print(X[0])
-
-    ##FIXME: below may not be in order?
-    ##splitting to test and train:
-    x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size = .3, shuffle = True)
-    y_train = np.array(y_train)
-    y_test = np.array(y_test)
-    x_train = np.array(x_train)    
-    x_test = np.array(x_test)
-
-    print("y_train : " + str(y_train)) ##now - 7/10 arrays (containing label names) in y array, are for training
-    print("y_test : " + str(y_test)) ##now - 3/10 arrays (in y array) are for testing
-    # print("x_train : " + str(x_train))#str(np.shape(x_train))) ##now - 7/10 arrays (containing label names) in y array, are for training
-    # print("x_test : " + str(x_test))#str(np.shape(x_test))) ##now - 3/10 arrays (in y array) are for testing
-
-    asv = ASV(threshold=0.8)
-    asv.train(x_train, y_train)
-
-    '''fixme (noel): below not needed'''
-    # speaker1_wavs = np.array(speaker_wavs['533'])
-    # create the speaker verification class 
-    # asv = ASV(threshold=0.8)
-    # speaker1_embed = []
-    # for feat in speaker1_wavs:
-    #     embed = asv.extract_features(feat)
-    #     speaker1_embed.append(embed)
-    # speaker1_embed = np.array(speaker1_embed)
-    # print(speaker1_embed)
-    '''!!'''
-
- 
-
     X, y = create_X_Y(speaker_wavs)
     
     print("X = ", X)
@@ -252,15 +202,20 @@ if __name__ == "__main__":
     # print(X_embed)
 
     # split into training and testing
-    X_train, X_test, y_train, y_test = train_test_split(X_embed, y, test_size=0.5)
+    X_train, X_test, y_train, y_test = train_test_split(X_embed, y, test_size=0.7)
+
+    print(np.shape(X_train))
 
     # train svm classifier
-    # asv.train_svm(X_train, y_train)
+    asv.train_svm(X_train, y_train)
 
     # train the gmm model
-    asv.train_gmm(X_train)
+    # asv.train_gmm(X_train)
 
     y_pred = asv.lin_svm_clf.predict(X_test)
+    # y_pred = asv.gm.predict(X_test)
+
+    print("Predicted labels = ", y_pred)
 
     print("accuracy = ", accuracy_score(y_test, y_pred))
 
@@ -292,3 +247,6 @@ if __name__ == "__main__":
     # print(sim)
 
     # asv.verify_speaker(test_sample)
+
+
+    ####### Test Speaker Verification on the VoxCeleb1 datataset ##########
