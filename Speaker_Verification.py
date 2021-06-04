@@ -108,8 +108,7 @@ class ASV():
             print("Speaker is Not Registered or Claimed idenity does not match the registered speakers")
             print('Similarity of the test sample is ', self.sim)
 
-    
-    def train(self, X, y):
+    def trainKNN(self, X, y, nn):
 
         '''
         Used to train a speaker recognition model
@@ -120,10 +119,12 @@ class ASV():
 
         #TODO: implement a nearest neighbour algorithm. Train it on the voice dataset, already available in the repository.
         
-        nghbr = neighbors.KNeighborsClassifier(n_neighbors = 3)
+        nghbr = neighbors.KNeighborsClassifier(n_neighbors = nn)
         nghbr.fit(X, y)
+        # print(nghbr.predict([[1.1]]))
 
-        return X
+
+        return nghbr
 
 
     def train_svm(self, X, Y):
@@ -219,6 +220,13 @@ if __name__ == "__main__":
 
     print("accuracy = ", accuracy_score(y_test, y_pred))
 
+
+    nghbr = asv.trainKNN(X_train, y_train, 2)
+    print(nghbr)
+    n_pred = nghbr.predict(X_test)
+    print("accuracy of n (X test) knn = ", accuracy_score(y_test, n_pred))
+    ##@ testsize=.8, nn=2 => .8875 accuracy
+    
     # # speaker1_embed = []
     # # for feat in speaker1_wavs:
     # #     embed = asv.extract_features(feat)
