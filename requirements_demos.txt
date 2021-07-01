@@ -8,3 +8,7 @@ matplotlib>=3.0.0
 sounddevice
 tqdm
 umap-learn
+playsound
+simpleaudio
+pyaudio
+wave
