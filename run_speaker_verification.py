@@ -47,18 +47,23 @@ speaker1_wavs = speaker_wavs['id10001']
 speaker2_wavs = speaker_wavs['id10002']
 speaker3_wavs = speaker_wavs['id10003']
 
-print(np.shape(speaker1_wavs))
-print(np.shape(speaker2_wavs))
-print(np.shape(speaker3_wavs))
+print(speaker1_wavs)
+
+# print(np.shape(speaker1_wavs))
+# print(np.shape(speaker2_wavs))
+# print(np.shape(speaker3_wavs))
 
  # split into training and testing
 speaker1_train, speaker1_test = train_test_split(speaker1_wavs, test_size=0.8)
 speaker2_train, speaker2_test = train_test_split(speaker2_wavs, test_size=0.8)
 speaker3_train, speaker3_test = train_test_split(speaker3_wavs, test_size=0.8)
 
-print(np.shape(speaker1_train))
-print(np.shape(speaker2_train))
-print(np.shape(speaker3_train))
+# print(np.shape(speaker1_train))
+# print(np.shape(speaker2_train))
+# print(np.shape(speaker3_train))
+
+print(speaker1_train)
+print(type(speaker1_train))
 
 # register the speakers
 asv.register_speaker(speaker1_train, id = 'id10001')

@@ -143,6 +143,9 @@ class VoiceEncoder(nn.Module):
         """
         # Compute where to split the utterance into partials and pad the waveform with zeros if
         # the partial utterances cover a larger range.
+
+        # print(wav)
+        # wav = wav.tolist()
         wav_slices, mel_slices = self.compute_partial_slices(len(wav), rate, min_coverage)
         max_wave_length = wav_slices[-1].stop
         if max_wave_length >= len(wav):

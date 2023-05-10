@@ -45,6 +45,7 @@ class ASV():
         adds a new speaker
         '''
 
+        print(wavs_list)
         speaker_embed = encoder.embed_speaker(wavs_list)
         
         # self._speaker_embeddings.append(speaker_embed)
@@ -179,6 +180,8 @@ if __name__ == "__main__":
 
     print("y = ", y)
 
+    # print("X0 shape = ", np.shape(X[1]))
+
     
     # y = ['367'] * 10
     # y = np.array(y)
@@ -196,6 +199,8 @@ if __name__ == "__main__":
     # embedding the voices in X
     X_embed = []
     for wav_processed in X:
+
+        # print(np.shape(wav_processed))
 
         # print(wav_processed)
         X_embed.append(asv.extract_features(wav_processed))
